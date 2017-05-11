@@ -15,43 +15,13 @@
     }
   }
 
-  #Creates flag for data that isn't logically possible. The return value is a string explanation, plus each of the offending variables and identification
-  Logic_flag<-function(index,varname,contradiction,dataset,correction,ID_variable = 'Impact.Entry.ID', flag_record=NULL){
-    ID<-dataset[index,ID_variable]
-    Variable <- paste(varname, collapse = ', ')
-    Current <- paste(dataset[index,varname], collapse = ', ')
-    if(length(correction)==1){ #if the correction is a multirow vector
-      Correction <- as.character(correction)
-    } else{
-      pst<-correction[1]
-      for(i in 2:length(correction)){
-        pst <- paste(pst, 'OR', correction[i])
-      }
-      Correction <- pst
-    }
-    for(contra in contradiction){
-      if(!exists('sentence')){
-        sentence<-paste(contra,'is',as.character(dataset[index,contra]),sep =' ')
-      } else{
-        sentence<-paste(sentence,', ',contra,' is ',as.character(dataset[index,contra]),', ',sep = '')
-      }
-    }
-    Problem <- paste(sentence, 'but',paste(varname,collapse = ', '), 'is', as.character(dataset[index,varname]), sep=' ')
-    df<-data.frame(ID,Variable, Current, Correction, Problem)
-    if(is.null(flag_record)){
-      flag_record<-df
-      return(flag_record)
-    } else{
-      flag_record<-rbind(flag_record,df)
-      return(flag_record)
-    }
-  }
-# Progress Bar ----
+#' @name Progress Bar
 #' @details a function that prints a graphical progress bar based on provided index and total.
 #' Default barLength is 20 characters.
 #' @param index - the index position which may represent a position within a vector or dataframe.
-#' @param total - the total length or number of rows which may represent the total number of actions to be computed.
-#' @param barLength - the length of the progress in character spaces
+#' @param total - the total length or number of actions to be computed, which may be the length of 
+#' a vector or the nrow() of a data.frame.
+#' @param barLength - the length of the progress bar in character spaces
 progBar<-function(index,total,barLength = 20){
   barLength<-round(barLength)
   progNum<-round(barLength*(index/total))
@@ -73,6 +43,7 @@ progBar<-function(index,total,barLength = 20){
   progress<-paste(progress,"| ",percentage,sep ="")
   cat("\r",progress) #Note: carriage return
 }
+
 #' @name relationshipBalance
 #' @details Fills in missing explicit relationships using an ID variable and a relationship variable.
 #' First, this function checks this award's list of related-awards' related-awards (i.e. meta-related awards) to ensure
@@ -132,6 +103,7 @@ relationshipBalance<-function(IDVar = "Economic.Impact.ID", relationVar = "Other
     }
     assign(setName, dataset, envir = env) #export revised data
 }
+
 #' Remove Values ----
 #' @details A function that removes all objects in the the .GlobalEnv. May be used to clean up at the
 #' end of a script file.
@@ -144,51 +116,21 @@ rm_values<-function(){
       }
     }
 }
-#' String to vector conversion functions
-  #' @details String to vector - Converts a character string of items (separated by ; for default) into a
-  #' character vector that is iterable. Does NOT return list.
-  #' @param charList - a character string to separate and return a vector
-  #' @param separator - how items are separated in charList
-  #' @return - character vector with charList items as elements
-  strToVec<-function(charList, separator = ";"){
-      if(class(charList) != "character"){
-          charList<-as.character(charList)
-          cat("WARNING: charList converted to character.\n")
-      }
-      if(length(charList) != 0){
-          return(strsplit(charList,split = separator)[[1]])
-      } else{
-          return(character(0))
-      }
-  }
-  #' @details Vector to string - Converts a character vector of items into aseparated by ; for default).
-  #' Does NOT return list.
-  #' @param charList - a character vector to separate and return a vector
-  #' @param separator - how items in charList are two be separated
-  #' @return - character string with charList elements all on in a single element
-  vecToStr<-function(charList, separator = ";"){
-      if(class(charList) != "character"){
-          charList<-as.character(charList)
-          cat("WARNING: charList converted to character.\n")
-      }
-      if(length(charList) != 0){
-          return(paste(charList,collapse = separator))
-      } else{
-          return("")
-      }
-  }
+
 #' @details python_boolean directly coverts python boolean values to R logical values, and vice versa,
 #' within a dataset.
-python_boolean<-function(dataset){
-    for(varname in names(dataset)){
-        if('False' %in% dataset[,varname] | 'True' %in% dataset[,varname]){
-            dataset[,varname]<-as.logical(dataset[,varname])
-        } else if(is.logical(dataset[,varname])){
-            dataset[,varname]<-ifelse(dataset[,varname],'True','False')
+python_boolean_translation <-function(data, envir = parent.frame()){
+    data_name = deparse(substitute(data))
+    for(varname in names(data)){
+        if('False' %in% data[,varname] | 'True' %in% data[,varname]){
+            data[,varname]<-as.logical(data[,varname])
+        } else if(is.logical(data[,varname])){
+            data[,varname]<-ifelse(data[,varname],'True','False')
         }
     }
-    return(dataset)
+    assign(data_name, data, envir = envir)
 }
+
 #' @name sort_variables
 #' @details sorts the columns of a data.frame object, excluding 'head_variables' to be in the front
 #' in the given order.
