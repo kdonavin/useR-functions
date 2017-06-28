@@ -99,6 +99,19 @@ birth_prob<-function(people){
         return(numerator/denominator)
       }
     }
+#' @details seperator is a function for seperating printed reports with a clean line
+    seperator<-function(n = 100,lty = "-"){
+        line<-lty
+        for(i in 1:n){
+            line<-paste(line,lty,sep = "")
+        }
+        writeLines(paste('\n',line,'\n',sep = ""))
+    }
+#' @title tab
+#' @details A function that creates a tab for display of data
+    tab<-function(){
+        cat('\t')
+    }
 
   # Stolen functions
     bmatrix = function(x, digits=NULL, ...) {
